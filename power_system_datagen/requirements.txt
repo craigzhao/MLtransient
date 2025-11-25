@@ -1,0 +1,19 @@
+# Power System Data Generation Framework
+# Required dependencies
+
+# Core scientific computing
+numpy>=1.20.0
+scipy>=1.7.0
+
+# Deep learning (for tensor operations)
+torch>=1.10.0
+
+# Visualization
+matplotlib>=3.3.0
+
+# Optional: PyTorch ODE solver (for torch backend)
+# Uncomment if using backend="torch"
+# torchdiffeq>=0.2.0
+
+# Data handling
+# pickle is built-in to Python
