@@ -2,7 +2,14 @@
 
 ## Summary of Bugs Fixed
 
-### **LATEST FIX (9)**: Type Mismatch in sample_initial_states
+### **LATEST FIX (11)**: List Input Handling in Simulator
+- **File**: `simulation/simulator.py`
+- **Problem**: `time_points` passed as list caused AttributeError (lists don't have `.shape`)
+- **Impact**: `AttributeError: 'list' object has no attribute 'shape'` during simulation
+- **Fix**: Check for list type first and convert to numpy/torch before checking shape
+- **Lines**: 67-70, 127-145 in `simulation/simulator.py`
+
+### **FIX 9**: Type Mismatch in sample_initial_states
 - **File**: `sampling/samplers.py`
 - **Problem**: `equilibrium_state` type didn't match `use_torch` setting
 - **Impact**: TypeError when adding equilibrium_state to perturbations
@@ -68,7 +75,8 @@
 3. `power_system_datagen/generator.py`
 4. `power_system_datagen/sampling/__init__.py`
 5. `power_system_datagen/sampling/samplers.py`
-6. `power_system_datagen/utils/__init__.py`
+6. `power_system_datagen/simulation/simulator.py`
+7. `power_system_datagen/utils/__init__.py`
 
 ## Testing Recommendations
 
@@ -102,10 +110,10 @@ print(f"Equilibrium control shape: {eq_control.shape}")
 ## Bug Categories Fixed
 
 - ✅ Import/Export errors (3 bugs: #1, #8, #10)
-- ✅ Type mismatches (numpy vs torch) (5 bugs: #3, #4, #6, #7, #9)
+- ✅ Type mismatches (numpy vs torch) (6 bugs: #3, #4, #6, #7, #9, #11)
 - ✅ Complex number handling (1 bug: #2)
 - ✅ Matrix dimension errors (1 bug: #5)
 
-**Total bugs fixed: 10**
+**Total bugs fixed: 11**
 
 All major bugs have been identified and fixed. The framework should now work correctly for both numpy and PyTorch backends.
