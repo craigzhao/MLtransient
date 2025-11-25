@@ -2,6 +2,13 @@
 
 ## Summary of Bugs Fixed
 
+### **LATEST FIX (9)**: Type Mismatch in sample_initial_states
+- **File**: `sampling/samplers.py`
+- **Problem**: `equilibrium_state` type didn't match `use_torch` setting
+- **Impact**: TypeError when adding equilibrium_state to perturbations
+- **Fix**: Convert equilibrium_state to torch.Tensor when `use_torch=True`, to numpy array when `use_torch=False`
+- **Lines**: 112-113, 157-160
+
 ### 1. **Missing Import in config/__init__.py**
 - **Bug**: `create_custom_generator` was defined but not exported
 - **Impact**: Custom generator example would fail with import error
@@ -48,13 +55,20 @@
 - **Impact**: Import errors in example scripts
 - **Fix**: Added both functions to `__all__` list in `utils/__init__.py`
 
+### **FIX 10**: Missing Export of set_random_seed
+- **File**: `sampling/__init__.py`
+- **Problem**: `set_random_seed` function not exported from sampling module
+- **Impact**: ImportError when trying to import in generator.py
+- **Fix**: Added `set_random_seed` to exports in `sampling/__init__.py`
+
 ## Files Modified
 
 1. `power_system_datagen/config/__init__.py`
 2. `power_system_datagen/models/generator_model.py`
 3. `power_system_datagen/generator.py`
-4. `power_system_datagen/sampling/samplers.py`
-5. `power_system_datagen/utils/__init__.py`
+4. `power_system_datagen/sampling/__init__.py`
+5. `power_system_datagen/sampling/samplers.py`
+6. `power_system_datagen/utils/__init__.py`
 
 ## Testing Recommendations
 
@@ -87,11 +101,11 @@ print(f"Equilibrium control shape: {eq_control.shape}")
 
 ## Bug Categories Fixed
 
-- ✅ Import/Export errors
-- ✅ Type mismatches (numpy vs torch)
-- ✅ Complex number handling
-- ✅ Matrix dimension errors
-- ✅ Broadcasting errors
-- ✅ Tensor conversion issues
+- ✅ Import/Export errors (3 bugs: #1, #8, #10)
+- ✅ Type mismatches (numpy vs torch) (5 bugs: #3, #4, #6, #7, #9)
+- ✅ Complex number handling (1 bug: #2)
+- ✅ Matrix dimension errors (1 bug: #5)
+
+**Total bugs fixed: 10**
 
 All major bugs have been identified and fixed. The framework should now work correctly for both numpy and PyTorch backends.
