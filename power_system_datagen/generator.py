@@ -138,8 +138,12 @@ class DataGenerator:
 
         # Sample voltage parameters
         # Base parameters on equilibrium voltage
-        base_voltage_params = np.zeros((1, self.voltage_profile.n_parameters))
-        base_voltage_params[0, 1] = self.set_point_voltage  # V_0 term
+        if self.config.use_torch:
+            base_voltage_params = torch.zeros((1, self.voltage_profile.n_parameters))
+            base_voltage_params[0, 1] = self.set_point_voltage  # V_0 term
+        else:
+            base_voltage_params = np.zeros((1, self.voltage_profile.n_parameters))
+            base_voltage_params[0, 1] = self.set_point_voltage  # V_0 term
 
         voltage_params = sample_voltage_parameters(
             n,
@@ -152,16 +156,22 @@ class DataGenerator:
         # Adjust initial delta based on initial voltage angle
         theta_0, _ = self.voltage_profile.get_initial_voltage(voltage_params)
         if self.config.use_torch:
-            delta_adjustment = theta_0 @ torch.tensor([[0., 0., 1., 0.]]).T
-            initial_states = initial_states + delta_adjustment.T
+            # Broadcast theta_0 adjustment to delta state (index 2)
+            delta_adjustment = torch.zeros_like(initial_states)
+            delta_adjustment[:, 2:3] = theta_0
+            initial_states = initial_states + delta_adjustment
         else:
-            delta_adjustment = theta_0 @ np.array([[0., 0., 1., 0.]]).T
-            initial_states = initial_states + delta_adjustment.T
+            # Broadcast theta_0 adjustment to delta state (index 2)
+            delta_adjustment = np.zeros_like(initial_states)
+            delta_adjustment[:, 2:3] = theta_0
+            initial_states = initial_states + delta_adjustment
 
         # Create control inputs (constant for all samples)
         if self.config.use_torch:
-            control_inputs = torch.tensor(self.control_input).repeat(n, 1)
-            equilibrium_states = torch.tensor(self.equilibrium_state).repeat(n, 1)
+            control_input_tensor = torch.tensor(self.control_input) if not torch.is_tensor(self.control_input) else self.control_input
+            equilibrium_tensor = torch.tensor(self.equilibrium_state) if not torch.is_tensor(self.equilibrium_state) else self.equilibrium_state
+            control_inputs = control_input_tensor.repeat(n, 1)
+            equilibrium_states = equilibrium_tensor.repeat(n, 1)
         else:
             control_inputs = np.repeat(self.control_input, n, axis=0)
             equilibrium_states = np.repeat(self.equilibrium_state, n, axis=0)

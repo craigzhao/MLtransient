@@ -75,11 +75,12 @@ def sample_initial_states(
 
     if use_torch:
         samples = torch.rand((n_samples, 2))
+        pi_val = torch.tensor(np.pi)
 
         if sampling_mode == "radial":
             # Linear radial distribution
             radius = samples[:, 0:1] * perturbation_radius
-            angle = samples[:, 1:2] * 2 * np.pi - np.pi
+            angle = samples[:, 1:2] * 2 * pi_val - pi_val
             perturbations = torch.cat([
                 radius * torch.cos(angle),
                 radius * torch.sin(angle)
@@ -88,7 +89,7 @@ def sample_initial_states(
         elif sampling_mode == "annular":
             # Uniform in annular region (sqrt for uniform area)
             radius = torch.sqrt(samples[:, 0:1]) * perturbation_radius
-            angle = samples[:, 1:2] * 2 * np.pi - np.pi
+            angle = samples[:, 1:2] * 2 * pi_val - pi_val
             perturbations = torch.cat([
                 radius * torch.cos(angle),
                 radius * torch.sin(angle)
@@ -96,7 +97,7 @@ def sample_initial_states(
 
         elif sampling_mode == "square":
             # Uniform in square region
-            perturbations = (samples * 2 - 1.0) * perturbation_radius / 2 * np.sqrt(np.pi)
+            perturbations = (samples * 2 - 1.0) * perturbation_radius / 2 * torch.sqrt(pi_val)
 
         else:
             raise ValueError(f"Unknown sampling mode: {sampling_mode}")

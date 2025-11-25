@@ -62,9 +62,15 @@ class SynchronousGenerator:
         self.X_q_prime = self.X_d_prime
 
         # Impedance matrix for current calculation
-        self.Z = np.array([[self.R_s, -self.X_q_prime],
-                           [self.X_d_prime, self.R_s]])
-        self.Z_inv = np.linalg.inv(self.Z)
+        Z = np.array([[self.R_s, -self.X_q_prime],
+                      [self.X_d_prime, self.R_s]])
+        Z_inv = np.linalg.inv(Z)
+
+        # Store as scalars for compatibility with both numpy and torch
+        self.Z_inv_00 = float(Z_inv[0, 0])
+        self.Z_inv_01 = float(Z_inv[0, 1])
+        self.Z_inv_10 = float(Z_inv[1, 0])
+        self.Z_inv_11 = float(Z_inv[1, 1])
 
         # Scaling parameters
         self.norm_to_scale_delta = parameters.get("norm_to_scale_delta", 1.0)
@@ -116,13 +122,13 @@ class SynchronousGenerator:
         if torch.is_tensor(delta):
             v1 = E_d_prime - V * torch.sin(delta - theta)
             v2 = E_q_prime - V * torch.cos(delta - theta)
-            I_d = self.Z_inv[0, 0] * v1 + self.Z_inv[0, 1] * v2
-            I_q = self.Z_inv[1, 0] * v1 + self.Z_inv[1, 1] * v2
+            I_d = self.Z_inv_00 * v1 + self.Z_inv_01 * v2
+            I_q = self.Z_inv_10 * v1 + self.Z_inv_11 * v2
         else:
             v1 = E_d_prime - V * np.sin(delta - theta)
             v2 = E_q_prime - V * np.cos(delta - theta)
-            I_d = self.Z_inv[0, 0] * v1 + self.Z_inv[0, 1] * v2
-            I_q = self.Z_inv[1, 0] * v1 + self.Z_inv[1, 1] * v2
+            I_d = self.Z_inv_00 * v1 + self.Z_inv_01 * v2
+            I_q = self.Z_inv_10 * v1 + self.Z_inv_11 * v2
         return I_d, I_q
 
     def _compute_electrical_power(self, E_q_prime, E_d_prime, I_d, I_q):
@@ -154,10 +160,10 @@ class SynchronousGenerator:
             I_dq = current_injection * torch.exp(-1j * (delta - np.pi / 2))
             V_dq = V_complex * torch.exp(-1j * (delta - np.pi / 2))
 
-            E_d_prime = (self.X_q - self.X_q_prime) * I_dq.imag
-            E_q_prime = V_dq.imag + self.R_s * I_dq.imag + self.X_d_prime * I_dq.real
-            E_fd = E_q_prime + (self.X_d - self.X_d_prime) * I_dq.real
-            P_M = self._compute_electrical_power(E_q_prime, E_d_prime, I_dq.real, I_dq.imag)
+            E_d_prime = torch.real((self.X_q - self.X_q_prime) * I_dq.imag)
+            E_q_prime = torch.real(V_dq.imag + self.R_s * I_dq.imag + self.X_d_prime * I_dq.real)
+            E_fd = torch.real(E_q_prime + (self.X_d - self.X_d_prime) * I_dq.real)
+            P_M = self._compute_electrical_power(E_q_prime, E_d_prime, torch.real(I_dq.real), torch.real(I_dq.imag))
 
             equilibrium_state = torch.cat([E_q_prime, E_d_prime, delta, torch.zeros_like(delta)], dim=-1)
             equilibrium_control = torch.cat([P_M, E_fd], dim=-1)
@@ -171,10 +177,10 @@ class SynchronousGenerator:
             I_dq = current_injection * np.exp(-1j * (delta - np.pi / 2))
             V_dq = V_complex * np.exp(-1j * (delta - np.pi / 2))
 
-            E_d_prime = (self.X_q - self.X_q_prime) * I_dq.imag
-            E_q_prime = V_dq.imag + self.R_s * I_dq.imag + self.X_d_prime * I_dq.real
-            E_fd = E_q_prime + (self.X_d - self.X_d_prime) * I_dq.real
-            P_M = self._compute_electrical_power(E_q_prime, E_d_prime, I_dq.real, I_dq.imag)
+            E_d_prime = np.real((self.X_q - self.X_q_prime) * I_dq.imag)
+            E_q_prime = np.real(V_dq.imag + self.R_s * I_dq.imag + self.X_d_prime * I_dq.real)
+            E_fd = np.real(E_q_prime + (self.X_d - self.X_d_prime) * I_dq.real)
+            P_M = self._compute_electrical_power(E_q_prime, E_d_prime, np.real(I_dq.real), np.real(I_dq.imag))
 
             equilibrium_state = np.concatenate([E_q_prime, E_d_prime, delta, np.zeros_like(delta)], axis=-1)
             equilibrium_control = np.concatenate([P_M, E_fd], axis=-1)
