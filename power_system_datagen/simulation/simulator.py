@@ -64,12 +64,17 @@ class ODESimulator:
                         voltage_params, rtol, atol):
         """Simulate using PyTorch and torchdiffeq."""
         # Ensure tensors
-        if not torch.is_tensor(time_points):
+        if isinstance(time_points, list):
             time_points = torch.tensor(time_points, dtype=torch.float32)
+        elif not torch.is_tensor(time_points):
+            time_points = torch.tensor(time_points, dtype=torch.float32)
+
         if not torch.is_tensor(initial_state):
             initial_state = torch.tensor(initial_state, dtype=torch.float32)
+
         if not torch.is_tensor(control_input):
             control_input = torch.tensor(control_input, dtype=torch.float32)
+
         if not torch.is_tensor(voltage_params):
             voltage_params = torch.tensor(voltage_params, dtype=torch.float32)
 
@@ -124,14 +129,25 @@ class ODESimulator:
                         voltage_params, rtol, atol):
         """Simulate using SciPy."""
         # Convert to numpy
-        if torch.is_tensor(time_points):
+        if isinstance(time_points, list):
+            time_points = np.array(time_points)
+        elif torch.is_tensor(time_points):
             time_points = time_points.numpy()
+
         if torch.is_tensor(initial_state):
             initial_state = initial_state.numpy()
+        elif not isinstance(initial_state, np.ndarray):
+            initial_state = np.array(initial_state)
+
         if torch.is_tensor(control_input):
             control_input = control_input.numpy()
+        elif not isinstance(control_input, np.ndarray):
+            control_input = np.array(control_input)
+
         if torch.is_tensor(voltage_params):
             voltage_params = voltage_params.numpy()
+        elif not isinstance(voltage_params, np.ndarray):
+            voltage_params = np.array(voltage_params)
 
         # Flatten arrays
         if len(time_points.shape) > 1:
