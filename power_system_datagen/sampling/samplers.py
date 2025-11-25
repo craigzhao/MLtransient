@@ -108,6 +108,10 @@ def sample_initial_states(
                 scaling_factors = torch.tensor(scaling_factors).reshape(1, -1)
             perturbations = perturbations * scaling_factors
 
+        # Convert equilibrium_state to torch if needed
+        if not torch.is_tensor(equilibrium_state):
+            equilibrium_state = torch.tensor(equilibrium_state, dtype=torch.float32)
+
         # Create full state perturbations (only perturb specified indices)
         if len(equilibrium_state.shape) == 1:
             equilibrium_state = equilibrium_state.reshape(1, -1)
@@ -148,6 +152,12 @@ def sample_initial_states(
             if isinstance(scaling_factors, (list, tuple)):
                 scaling_factors = np.array(scaling_factors).reshape(1, -1)
             perturbations = perturbations * scaling_factors
+
+        # Convert equilibrium_state to numpy if needed
+        if torch.is_tensor(equilibrium_state):
+            equilibrium_state = equilibrium_state.numpy()
+        elif not isinstance(equilibrium_state, np.ndarray):
+            equilibrium_state = np.array(equilibrium_state)
 
         if len(equilibrium_state.shape) == 1:
             equilibrium_state = equilibrium_state.reshape(1, -1)
