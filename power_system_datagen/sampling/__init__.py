@@ -4,10 +4,12 @@ from .samplers import (
     sample_time,
     sample_initial_states,
     sample_voltage_parameters,
+    set_random_seed,
 )
 
 __all__ = [
     "sample_time",
     "sample_initial_states",
     "sample_voltage_parameters",
+    "set_random_seed",
 ]
